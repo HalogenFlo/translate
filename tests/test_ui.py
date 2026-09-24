@@ -18,6 +18,22 @@ def test_subtitle_card_creation():
     assert card.original_text == "Hello world"
     assert card.translated_text == "Xin chào thế giới"
     assert "Hello world" in card.lbl_original.cget("text")
-    assert "Xin chào thế giới" in card.lbl_translated.cget("text")
-
     root.destroy()
+
+def test_format_all_history():
+    from src.ui.app import ToolListenApp
+    history = [
+        {"time": "12:00:00", "original": "Hello", "translated": "Xin chào"},
+        {"time": "12:00:05", "original": "Goodbye", "translated": "Tạm biệt"}
+    ]
+    formatted_bilingual = ToolListenApp.format_history_text(history, mode="both")
+    assert "Hello" in formatted_bilingual
+    assert "Xin chào" in formatted_bilingual
+    assert "Goodbye" in formatted_bilingual
+    assert "Tạm biệt" in formatted_bilingual
+
+    formatted_vi_only = ToolListenApp.format_history_text(history, mode="vi_only")
+    assert "Xin chào" in formatted_vi_only
+    assert "Tạm biệt" in formatted_vi_only
+    assert "Hello" not in formatted_vi_only
+

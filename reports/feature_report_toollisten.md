@@ -29,6 +29,7 @@ graph TD
         TOP["📌 Ghim Trên Cùng (Always On Top)"]
         LIVE["🔴 Live Streaming Banner<br/>(Nói tới đâu xuất chữ tới đó)"]
         FAST_CPY["⚡ Cụm Nút Copy Siêu Tốc [F2/F3] & Auto-Copy"]
+        ALL_CPY["📑 Nút COPY TẤT CẢ [F4] (Song ngữ hoặc Thuần Việt)"]
         MIC_BTN["🎙️ Nút Bật/Tắt Micro (Mute / Unmute tức thì)"]
         CTRL["⚙️ Bảng Điều Khiển (Chọn Loa/Mic, Ngôn ngữ, Bắt đầu/Dừng)"]
         CARD["💬 Danh Sách Card Phụ Đề Song Ngữ"]
@@ -44,6 +45,7 @@ graph TD
     STT -->|Final Original Text| TRANS
     TRANS -->|Song Ngữ| CARD
     TRANS -->|Auto-Copy| FAST_CPY
+    CARD --> ALL_CPY
     CARD --> CPY
     CTRL -->|Điều khiển luồng| AudioEngine
     MIC_BTN -->|Bật / Tắt Microphone| MIC

@@ -167,6 +167,7 @@ class ToolListenApp(ctk.CTk):
         # Đăng ký phím tắt Copy siêu tốc
         self.bind("<F2>", lambda e: self._copy_latest_original())
         self.bind("<F3>", lambda e: self._copy_latest_translated())
+        self.bind("<F4>", lambda e: self._copy_all_history())
 
         # Tải danh sách thiết bị
         self._load_devices()
@@ -347,6 +348,32 @@ class ToolListenApp(ctk.CTk):
         )
         self.btn_quick_trans.pack(side="left", fill="x", expand=True, padx=4)
 
+        # Hàng nút Copy Tất Cả Lịch Sử (F4)
+        self.all_copy_frame = ctk.CTkFrame(self.quick_bar, fg_color="transparent")
+        self.all_copy_frame.pack(fill="x", padx=8, pady=(0, 6))
+
+        self.btn_copy_all = ctk.CTkButton(
+            self.all_copy_frame,
+            text="📑 COPY TẤT CẢ (LỊCH SỬ) [F4]",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#7c3aed", # Màu tím nổi bật
+            hover_color="#6d28d9",
+            height=30,
+            command=self._copy_all_history
+        )
+        self.btn_copy_all.pack(side="left", fill="x", expand=True, padx=(0, 4))
+
+        self.btn_copy_all_vi = ctk.CTkButton(
+            self.all_copy_frame,
+            text="🇻🇳 CHỈ COPY TOÀN BỘ TIẾNG VIỆT",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#0d9488", # Xanh ngọc
+            hover_color="#0f766e",
+            height=30,
+            command=self._copy_all_vietnamese
+        )
+        self.btn_copy_all_vi.pack(side="left", fill="x", expand=True, padx=4)
+
         # Checkbox Auto-Copy to Clipboard
         self.auto_copy_var = ctk.BooleanVar(value=False)
         self.chk_auto_copy = ctk.CTkCheckBox(
@@ -430,7 +457,7 @@ class ToolListenApp(ctk.CTk):
 
         self.lbl_count = ctk.CTkLabel(
             self.status_bar,
-            text="Tổng câu: 0 | Phím tắt: F2 (Copy Gốc), F3 (Copy Dịch)",
+            text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả)",
             font=ctk.CTkFont(size=11),
             text_color="#9ca3af"
         )
@@ -462,6 +489,49 @@ class ToolListenApp(ctk.CTk):
             pyperclip.copy(text)
             self._flash_quick_button(self.btn_quick_trans, "⚡ COPY DỊCH TIẾNG VIỆT [F3]")
             self.lbl_status.configure(text=f"✓ Đã copy tiếng Việt: \"{text[:30]}...\"", text_color="#4ade80")
+
+    @staticmethod
+    def format_history_text(history: List[Dict[str, str]], mode: str = "both") -> str:
+        """Định dạng toàn bộ lịch sử để copy vào Clipboard"""
+        if not history:
+            return ""
+
+        if mode == "vi_only":
+            lines = [item["translated"].strip() for item in history if item.get("translated") and item["translated"].strip()]
+            return "\n".join(lines)
+
+        # Mode both: song ngữ kèm mốc thời gian
+        blocks = []
+        for item in history:
+            t = item.get("time", "")
+            orig = item.get("original", "").strip()
+            trans = item.get("translated", "").strip()
+            blocks.append(f"[{t}]\nGốc: {orig}\nDịch: {trans}")
+        return "\n\n".join(blocks)
+
+    def _copy_all_history(self):
+        """Sao chép toàn bộ lịch sử phụ đề song ngữ vào Clipboard"""
+        if not self.history:
+            self.lbl_status.configure(text="⚠️ Chưa có phụ đề nào trong lịch sử để copy!", text_color="#f59e0b")
+            return
+
+        text = self.format_history_text(self.history, mode="both")
+        pyperclip.copy(text)
+        self.btn_copy_all.configure(text=f"✓ ĐÃ COPY TẤT CẢ ({len(self.history)} CÂU)!", fg_color="#10b981")
+        self.after(1200, lambda: self.btn_copy_all.configure(text="📑 COPY TẤT CẢ (LỊCH SỬ) [F4]", fg_color="#7c3aed"))
+        self.lbl_status.configure(text=f"✓ Đã copy toàn bộ {len(self.history)} câu song ngữ vào Clipboard!", text_color="#38bdf8")
+
+    def _copy_all_vietnamese(self):
+        """Sao chép toàn bộ phần dịch Tiếng Việt vào Clipboard"""
+        if not self.history:
+            self.lbl_status.configure(text="⚠️ Chưa có phụ đề nào trong lịch sử để copy!", text_color="#f59e0b")
+            return
+
+        text = self.format_history_text(self.history, mode="vi_only")
+        pyperclip.copy(text)
+        self.btn_copy_all_vi.configure(text="✓ ĐÃ COPY TOÀN BỘ TIẾNG VIỆT!", fg_color="#10b981")
+        self.after(1200, lambda: self.btn_copy_all_vi.configure(text="🇻🇳 CHỈ COPY TOÀN BỘ TIẾNG VIỆT", fg_color="#0d9488"))
+        self.lbl_status.configure(text=f"✓ Đã copy toàn bộ {len(self.history)} câu tiếng Việt vào Clipboard!", text_color="#4ade80")
 
     def _flash_quick_button(self, btn, orig_text: str):
         btn.configure(text="✓ ĐÃ COPY VÀO CLIPBOARD!", fg_color="#10b981")
@@ -685,7 +755,7 @@ class ToolListenApp(ctk.CTk):
             "translated": translated
         })
 
-        self.lbl_count.configure(text=f"Tổng câu: {len(self.history)} | Phím tắt: F2 (Gốc), F3 (Dịch)")
+        self.lbl_count.configure(text=f"Tổng câu: {len(self.history)} | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả)")
 
     def _clear_subtitles(self):
         self.history.clear()
@@ -702,7 +772,7 @@ class ToolListenApp(ctk.CTk):
             justify="center"
         )
         self.placeholder_lbl.pack(pady=35)
-        self.lbl_count.configure(text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch)")
+        self.lbl_count.configure(text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả)")
 
     def _export_history(self):
         if not self.history:

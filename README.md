@@ -10,9 +10,11 @@
    - Tích hợp luồng phát hiện âm thanh ngắt đoạn siêu nhanh (`silence_timeout = 0.35s`).
    - Khung **`🔴 Đang nói trực tiếp (Live Stream)`**: Chữ và bản dịch hiển thị tức thời ngay khi người nói phát âm từng từ, không cần đợi nói xong hết câu.
 
-2. **Cụm Nút Copy Siêu Tốc 1-Click & Phím Tắt [F2] / [F3]**:
+2. **Cụm Nút Copy Siêu Tốc 1-Click & Phím Tắt [F2] / [F3] / [F4]**:
    - ⚡ **`[COPY GỐC VỪA NÓI - F2]`**: Bấm 1 click hoặc gõ phím **`F2`** để copy ngay câu thoại gốc mới nhất.
    - ⚡ **`[COPY DỊCH TIẾNG VIỆT - F3]`**: Bấm 1 click hoặc gõ phím **`F3`** để copy ngay câu dịch tiếng Việt mới nhất.
+   - 📑 **`[COPY TẤT CẢ LỊCH SỬ - F4]`**: Bấm 1 click hoặc gõ phím **`F4`** để sao chép **toàn bộ cuộc hội thoại/video từ đầu đến giờ** (kèm mốc thời gian và cả bản gốc + dịch) để dán vào Word, Docs, Note hoặc ChatGPT!
+   - 🇻🇳 **`[CHỈ COPY TOÀN BỘ TIẾNG VIỆT]`**: Sao chép toàn bộ nội dung dịch thuần tiếng Việt để dễ dàng đọc và tổng kết.
    - ⚡ **Tự động Copy (Auto-Copy)**: Bật tùy chọn `[x] Tự động đưa câu dịch vào Clipboard`, người khác nói xong là câu dịch đã có sẵn trong bộ nhớ tạm, bạn chỉ việc ấn `Ctrl + V` để gửi ngay mà không cần chạm chuột vào nút copy!
 
 3. **Thu âm trực tiếp từ Loa Hệ Thống (WASAPI Loopback)**:

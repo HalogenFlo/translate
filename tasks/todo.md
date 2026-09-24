@@ -29,3 +29,9 @@
   - [x] Thêm tính năng "Tự động Copy vào Clipboard" (Auto-Copy)
   - [x] Chạy kiểm thử xác nhận toàn bộ test suite (12/12 Tests Passed)
   - [x] Cập nhật báo cáo và tài liệu hướng dẫn
+- [x] Giai đoạn 10: Thêm tính năng "Copy Tất Cả" (Copy All History) & Phím tắt F4
+  - [x] Viết unit test cho hàm format copy tất cả lịch sử (`tests/test_ui.py`)
+  - [x] Thêm nút `📑 COPY TẤT CẢ [F4]` và `🇻🇳 COPY TẤT CẢ TIẾNG VIỆT` vào `src/ui/app.py`
+  - [x] Đăng ký phím tắt toàn cục `F4`
+  - [x] Chạy kiểm thử xác nhận toàn bộ test suite (14/14 Tests Passed)
+  - [x] Cập nhật README, báo cáo và commit lên GitHub
