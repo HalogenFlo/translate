@@ -1,0 +1,31 @@
+# Kế hoạch phát triển ToolListen (Live Audio Subtitle & Translator)
+
+## Trạng thái các giai đoạn
+- [x] Khảo sát môi trường và phần cứng (Python 3.12, RTX 3060, WASAPI loopback, thư viện hỗ trợ)
+- [x] Giai đoạn 1: Thiết kế kiến trúc và sơ đồ tổng quan hệ thống (`ARCHITECTURE.md`)
+- [x] Giai đoạn 2: Xây dựng Module Dịch thuật (`src/translator/service.py`) theo TDD (Red -> Green -> Refactor)
+- [x] Giai đoạn 3: Xây dựng Module Nhận diện giọng nói STT (`src/stt/transcriber.py`) theo TDD
+- [x] Giai đoạn 4: Xây dựng Module Thu âm System Loopback & Mic (`src/audio/recorder.py`) theo TDD
+- [x] Giai đoạn 5: Xây dựng Giao diện Desktop Overlay Modern UI (`src/ui/app.py` & `main.py`)
+  - Chế độ Always-on-Top / Trong suốt mờ
+  - Hàng phụ đề song ngữ (Bản gốc + Bản dịch Tiếng Việt)
+  - Nút Copy 1-click cho bản gốc, bản dịch, hoặc cả hai
+  - Bộ chọn Thiết bị Âm thanh (Loa máy tính / Discord / Meet loopback hoặc Mic)
+  - Bộ chọn Ngôn ngữ (Tiếng Anh, Tự động, Tiếng Nhật, Hàn, Pháp, v.v.)
+  - Lịch sử hội thoại đầy đủ & tính năng xuất / xóa lịch sử
+- [x] Giai đoạn 6: Kiểm thử toàn diện tích hợp (10/10 Tests Passed) & tạo file khởi chạy thuận tiện `.bat`
+- [x] Giai đoạn 7: Lập báo cáo tính năng và sơ đồ hệ thống cuối cùng
+- [x] Giai đoạn 8: Thêm tính năng Bật/Tắt Microphone theo yêu cầu người dùng
+  - [x] Viết unit test cho tính năng Mute/Unmute & Bật/Tắt Micro (`tests/test_recorder.py`)
+  - [x] Cập nhật `AudioRecorder` với cờ `mic_enabled` / `toggle_mic()`
+  - [x] Thêm nút Toggle Micro trực quan trên giao diện `src/ui/app.py` (BẬT/TẮT Micro 1-click)
+  - [x] Chạy kiểm thử toàn bộ test suite (11/11 Tests Passed)
+  - [x] Cập nhật tài liệu `ARCHITECTURE.md` và `README.md`
+- [x] Giai đoạn 9: Tối ưu độ trễ siêu tốc (Live Interim Streaming) & Phím tắt 1-Click Copy
+  - [x] Thêm callback `on_phrase_interim` và giảm độ trễ ngắt câu trong `AudioRecorder`
+  - [x] Cập nhật unit test trong `tests/test_recorder.py`
+  - [x] Xây dựng Banner "🔴 Đang nói trực tiếp" (Live Streaming Subtitle) trong `src/ui/app.py`
+  - [x] Thêm nút lớn cố định "⚡ COPY CÂU VỪA NÓI" và phím tắt `F2` / `F3`
+  - [x] Thêm tính năng "Tự động Copy vào Clipboard" (Auto-Copy)
+  - [x] Chạy kiểm thử xác nhận toàn bộ test suite (12/12 Tests Passed)
+  - [x] Cập nhật báo cáo và tài liệu hướng dẫn

@@ -1,0 +1,9 @@
+soundcard>=0.4.6
+sounddevice>=0.5.6
+SpeechRecognition>=3.17.0
+deep-translator>=1.11.4
+customtkinter>=6.0.0
+pyperclip>=1.11.0
+numpy>=1.26.0
+requests>=2.31.0
+pytest>=8.0.0
