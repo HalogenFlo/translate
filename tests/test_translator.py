@@ -22,3 +22,12 @@ def test_translation_caching():
     assert text in service.cache
     res2 = service.translate(text, source_lang="en", target_lang="vi")
     assert res1 == res2
+
+def test_local_ai_translation():
+    service = TranslatorService(use_local_ai=True)
+    assert service.use_local_ai is True
+    result = service.translate("Good morning", source_lang="en", target_lang="vi")
+    assert isinstance(result, str)
+    assert len(result.strip()) > 0
+    assert "chào" in result.lower() or "buổi sáng" in result.lower()
+

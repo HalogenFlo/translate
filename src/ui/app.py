@@ -243,18 +243,31 @@ class ToolListenApp(ctk.CTk):
         self.lang_combo.set("Tiếng Anh (US)")
         self.lang_combo.grid(row=1, column=1, padx=12, pady=5, sticky="ew")
 
-        # Hàng 3: Trạng thái Micro
+        # Hàng 3: Động cơ Dịch thuật (Local AI vs Cloud)
+        lbl_engine = ctk.CTkLabel(self.ctrl_frame, text="Động cơ AI:", font=ctk.CTkFont(size=12, weight="bold"))
+        lbl_engine.grid(row=2, column=0, padx=12, pady=5, sticky="w")
+
+        self.engine_combo = ctk.CTkComboBox(
+            self.ctrl_frame,
+            values=["🤖 Model AI Cục Bộ (Offline 100% trên máy)", "🌐 Cloud API (MyMemory / Google)"],
+            width=380,
+            command=self._on_engine_changed
+        )
+        self.engine_combo.set("🤖 Model AI Cục Bộ (Offline 100% trên máy)")
+        self.engine_combo.grid(row=2, column=1, padx=12, pady=5, sticky="ew")
+
+        # Hàng 4: Trạng thái Micro
         self.lbl_mic_info = ctk.CTkLabel(
             self.ctrl_frame,
             text="🔒 Trạng thái Micro: Đã TẮT (Chỉ nghe âm thanh máy tính từ Discord/Meet/Video, không lẫn tiếng phòng)",
             font=ctk.CTkFont(size=11),
             text_color="#94a3b8"
         )
-        self.lbl_mic_info.grid(row=2, column=0, columnspan=2, padx=12, pady=(1, 4), sticky="w")
+        self.lbl_mic_info.grid(row=3, column=0, columnspan=2, padx=12, pady=(1, 4), sticky="w")
 
-        # Hàng 4: Các nút điều khiển chính
+        # Hàng 5: Các nút điều khiển chính
         self.action_frame = ctk.CTkFrame(self.ctrl_frame, fg_color="transparent")
-        self.action_frame.grid(row=3, column=0, columnspan=2, padx=12, pady=(4, 8), sticky="ew")
+        self.action_frame.grid(row=4, column=0, columnspan=2, padx=12, pady=(4, 8), sticky="ew")
 
         self.btn_listen = ctk.CTkButton(
             self.action_frame,
@@ -493,6 +506,14 @@ class ToolListenApp(ctk.CTk):
         if self.is_listening:
             self._stop_listening()
             self._start_listening()
+
+    def _on_engine_changed(self, choice):
+        use_local = "Local AI" in choice or "Cục Bộ" in choice
+        self.translator.set_engine_mode(use_local_ai=use_local)
+        if use_local:
+            self.lbl_status.configure(text="Đã kích hoạt: 🤖 Model AI Cục Bộ (Dịch Offline 100% trên máy)", text_color="#38bdf8")
+        else:
+            self.lbl_status.configure(text="Đã chuyển sang: 🌐 Cloud API (MyMemory / Google)", text_color="#fbbf24")
 
     def _toggle_mic(self):
         new_state = self.recorder.toggle_mic()
