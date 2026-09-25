@@ -11,6 +11,7 @@ import pyperclip
 from src.audio.recorder import AudioRecorder
 from src.stt.transcriber import SpeechTranscriber
 from src.translator.service import TranslatorService
+from src.tts.speaker import TextToSpeechService
 
 # Thiết lập theme mặc định hiện đại
 ctk.set_appearance_mode("dark")
@@ -132,6 +133,10 @@ class ToolListenApp(ctk.CTk):
         # Trạng thái & Services
         self.transcriber = SpeechTranscriber(default_lang="en-US")
         self.translator = TranslatorService()
+        self.tts = TextToSpeechService(
+            on_start=self._on_tts_start,
+            on_finish=self._on_tts_finish
+        )
         self.audio_queue = queue.Queue()
         self.interim_queue = queue.Queue(maxsize=1)
         self.result_queue = queue.Queue()
@@ -157,17 +162,18 @@ class ToolListenApp(ctk.CTk):
             on_phrase_interim=self._on_phrase_interim,
             sample_rate=16000,
             energy_threshold=0.012,
-            silence_timeout=0.35, # Dứt câu 0.35s là chốt ngay
-            min_phrase_len=0.25
+            silence_timeout=0.28, # Dứt câu 0.28s là chốt ngay tức thì
+            min_phrase_len=0.20
         )
 
         # Xây dựng giao diện
         self._build_ui()
 
-        # Đăng ký phím tắt Copy siêu tốc
+        # Đăng ký phím tắt Copy siêu tốc & Phím tắt Bật/Tắt Đọc Tiếng Việt
         self.bind("<F2>", lambda e: self._copy_latest_original())
         self.bind("<F3>", lambda e: self._copy_latest_translated())
         self.bind("<F4>", lambda e: self._copy_all_history())
+        self.bind("<F5>", lambda e: self._toggle_tts())
 
         # Tải danh sách thiết bị
         self._load_devices()
@@ -257,18 +263,58 @@ class ToolListenApp(ctk.CTk):
         self.engine_combo.set("🤖 Model AI Cục Bộ (Offline 100% trên máy)")
         self.engine_combo.grid(row=2, column=1, padx=12, pady=5, sticky="ew")
 
-        # Hàng 4: Trạng thái Micro
+        # Hàng 4: Cài đặt Giọng đọc Tiếng Việt (TTS Voice & Speed)
+        lbl_tts_setting = ctk.CTkLabel(self.ctrl_frame, text="Giọng đọc tiếng Việt:", font=ctk.CTkFont(size=12, weight="bold"))
+        lbl_tts_setting.grid(row=3, column=0, padx=12, pady=5, sticky="w")
+
+        self.tts_opt_frame = ctk.CTkFrame(self.ctrl_frame, fg_color="transparent")
+        self.tts_opt_frame.grid(row=3, column=1, padx=12, pady=5, sticky="ew")
+        self.tts_opt_frame.grid_columnconfigure(0, weight=3)
+        self.tts_opt_frame.grid_columnconfigure(1, weight=2)
+
+        self.tts_voice_combo = ctk.CTkComboBox(
+            self.tts_opt_frame,
+            values=[
+                "⚡ Siêu Tốc Realtime (Google Fast - 0.2s)",
+                "👩 Nữ Hoài My (Microsoft Neural)",
+                "👨 Nam Nam Minh (Microsoft Neural)"
+            ],
+            command=self._on_tts_voice_changed
+        )
+        self.tts_voice_combo.set("⚡ Siêu Tốc Realtime (Google Fast - 0.2s)")
+        self.tts_voice_combo.grid(row=0, column=0, padx=(0, 6), sticky="ew")
+
+        self.tts_rate_combo = ctk.CTkComboBox(
+            self.tts_opt_frame,
+            values=["1.15x (Nhanh vừa)", "1.0x (Chuẩn)", "1.25x (Nhanh)", "1.35x (Rất nhanh)"],
+            command=self._on_tts_rate_changed
+        )
+        self.tts_rate_combo.set("1.15x (Nhanh vừa)")
+        self.tts_rate_combo.grid(row=0, column=1, padx=(6, 0), sticky="ew")
+
+        # Hàng 5: Trạng thái Micro & TTS
+        self.info_status_frame = ctk.CTkFrame(self.ctrl_frame, fg_color="transparent")
+        self.info_status_frame.grid(row=4, column=0, columnspan=2, padx=12, pady=(1, 4), sticky="ew")
+
         self.lbl_mic_info = ctk.CTkLabel(
-            self.ctrl_frame,
-            text="🔒 Trạng thái Micro: Đã TẮT (Chỉ nghe âm thanh máy tính từ Discord/Meet/Video, không lẫn tiếng phòng)",
+            self.info_status_frame,
+            text="🔒 Micro: TẮT (Chỉ nghe loa máy tính)",
             font=ctk.CTkFont(size=11),
             text_color="#94a3b8"
         )
-        self.lbl_mic_info.grid(row=3, column=0, columnspan=2, padx=12, pady=(1, 4), sticky="w")
+        self.lbl_mic_info.pack(side="left", padx=(0, 12))
 
-        # Hàng 5: Các nút điều khiển chính
+        self.lbl_tts_info = ctk.CTkLabel(
+            self.info_status_frame,
+            text="🔈 Đọc Tiếng Việt: Đang TẮT (Nhấn F5 để bật đọc ra loa)",
+            font=ctk.CTkFont(size=11),
+            text_color="#94a3b8"
+        )
+        self.lbl_tts_info.pack(side="left")
+
+        # Hàng 6: Các nút điều khiển chính
         self.action_frame = ctk.CTkFrame(self.ctrl_frame, fg_color="transparent")
-        self.action_frame.grid(row=4, column=0, columnspan=2, padx=12, pady=(4, 8), sticky="ew")
+        self.action_frame.grid(row=5, column=0, columnspan=2, padx=12, pady=(4, 8), sticky="ew")
 
         self.btn_listen = ctk.CTkButton(
             self.action_frame,
@@ -279,43 +325,55 @@ class ToolListenApp(ctk.CTk):
             height=34,
             command=self._toggle_listening
         )
-        self.btn_listen.pack(side="left", fill="x", expand=True, padx=(0, 6))
+        self.btn_listen.pack(side="left", fill="x", expand=True, padx=(0, 4))
+
+        self.btn_tts = ctk.CTkButton(
+            self.action_frame,
+            text="🔊 Đọc TV: TẮT [F5]",
+            width=135,
+            height=34,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#475569",
+            hover_color="#334155",
+            command=self._toggle_tts
+        )
+        self.btn_tts.pack(side="left", padx=3)
 
         self.btn_mic = ctk.CTkButton(
             self.action_frame,
             text="🎙️ Micro: TẮT",
-            width=105,
+            width=95,
             height=34,
             font=ctk.CTkFont(size=12, weight="bold"),
             fg_color="#475569",
             hover_color="#334155",
             command=self._toggle_mic
         )
-        self.btn_mic.pack(side="left", padx=4)
+        self.btn_mic.pack(side="left", padx=3)
 
         self.btn_clear = ctk.CTkButton(
             self.action_frame,
             text="🗑️ Xóa",
-            width=70,
+            width=65,
             height=34,
             font=ctk.CTkFont(size=12),
             fg_color="#374151",
             hover_color="#4b5563",
             command=self._clear_subtitles
         )
-        self.btn_clear.pack(side="left", padx=4)
+        self.btn_clear.pack(side="left", padx=3)
 
         self.btn_export = ctk.CTkButton(
             self.action_frame,
             text="💾 Xuất TXT",
-            width=85,
+            width=80,
             height=34,
             font=ctk.CTkFont(size=12),
             fg_color="#374151",
             hover_color="#4b5563",
             command=self._export_history
         )
-        self.btn_export.pack(side="left", padx=(4, 0))
+        self.btn_export.pack(side="left", padx=(3, 0))
 
         # 3. Quick Instant-Copy Bar (Bấm 1 nút hoặc F2/F3 là copy ngay lập tức!)
         self.quick_bar = ctk.CTkFrame(self, fg_color="#1a1e29", corner_radius=8, border_width=1, border_color="#2a3347")
@@ -457,7 +515,7 @@ class ToolListenApp(ctk.CTk):
 
         self.lbl_count = ctk.CTkLabel(
             self.status_bar,
-            text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả)",
+            text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả), F5 (Đọc TV)",
             font=ctk.CTkFont(size=11),
             text_color="#9ca3af"
         )
@@ -619,6 +677,79 @@ class ToolListenApp(ctk.CTk):
                 self.transcriber.set_language(code)
                 break
 
+    def _toggle_tts(self):
+        """Bật hoặc tắt tính năng phát âm thanh tiếng Việt ra loa"""
+        new_state = self.tts.toggle()
+        if new_state:
+            self.btn_tts.configure(
+                text="🔊 Đọc TV: BẬT [F5]",
+                fg_color="#ea580c", # Cam neon nổi bật
+                hover_color="#c2410c"
+            )
+            self.lbl_tts_info.configure(
+                text="🟢 Đọc Tiếng Việt: ĐANG BẬT (Đọc to bản dịch ngay khi dứt câu)",
+                text_color="#4ade80"
+            )
+            self.lbl_status.configure(
+                text="✓ Đã BẬT chế độ Dịch Nói Tiếng Việt (TTS Realtime)!",
+                text_color="#4ade80"
+            )
+        else:
+            self.btn_tts.configure(
+                text="🔊 Đọc TV: TẮT [F5]",
+                fg_color="#475569",
+                hover_color="#334155"
+            )
+            self.lbl_tts_info.configure(
+                text="🔈 Đọc Tiếng Việt: Đang TẮT (Nhấn F5 để bật đọc ra loa)",
+                text_color="#94a3b8"
+            )
+            self.lbl_status.configure(
+                text="Đã TẮT chế độ đọc Tiếng Việt",
+                text_color="#9ca3af"
+            )
+
+    def _on_tts_voice_changed(self, choice):
+        if "Google" in choice or "Siêu Tốc" in choice:
+            self.tts.set_voice("google-fast")
+            self.lbl_status.configure(text="Đã chọn: ⚡ Động cơ TTS Siêu Tốc Realtime (Google Fast ~0.2s)", text_color="#38bdf8")
+        elif "Nam" in choice:
+            self.tts.set_voice("vi-VN-NamMinhNeural")
+            self.lbl_status.configure(text="Đã chọn: 👨 Giọng Nam Nam Minh (Microsoft Neural)", text_color="#38bdf8")
+        else:
+            self.tts.set_voice("vi-VN-HoaiMyNeural")
+            self.lbl_status.configure(text="Đã chọn: 👩 Giọng Nữ Hoài My (Microsoft Neural)", text_color="#38bdf8")
+
+    def _on_tts_rate_changed(self, choice):
+        if "1.0x" in choice:
+            self.tts.set_rate("+0%")
+        elif "1.25x" in choice:
+            self.tts.set_rate("+25%")
+        elif "1.35x" in choice:
+            self.tts.set_rate("+35%")
+        else:
+            self.tts.set_rate("+15%")
+
+    def _on_tts_start(self, text):
+        """Callback khi TTS bắt đầu phát âm thanh ra loa"""
+        try:
+            self.after(0, lambda: self.lbl_status.configure(
+                text=f"🔊 Đang đọc: \"{text[:30]}...\"",
+                text_color="#f59e0b"
+            ))
+        except Exception:
+            pass
+
+    def _on_tts_finish(self, text):
+        """Callback khi TTS hoàn tất phát câu"""
+        try:
+            self.after(0, lambda: self.lbl_status.configure(
+                text="Trạng thái: 🟢 Đang nghe" if self.is_listening else "Trạng thái: 🔴 Đang dừng",
+                text_color="#4ade80" if self.is_listening else "#9ca3af"
+            ))
+        except Exception:
+            pass
+
     def _toggle_always_on_top(self):
         self.is_always_on_top = not self.is_always_on_top
         self.attributes("-topmost", self.is_always_on_top)
@@ -700,6 +831,11 @@ class ToolListenApp(ctk.CTk):
                         "translated": translated_text,
                         "timestamp": now_str
                     })
+
+                    # Phát âm thanh Tiếng Việt ra loa nếu bật chế độ TTS Realtime
+                    if self.tts.enabled and translated_text:
+                        self.tts.speak(translated_text)
+
                 self.audio_queue.task_done()
             except Exception:
                 time.sleep(0.05)
@@ -755,7 +891,7 @@ class ToolListenApp(ctk.CTk):
             "translated": translated
         })
 
-        self.lbl_count.configure(text=f"Tổng câu: {len(self.history)} | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả)")
+        self.lbl_count.configure(text=f"Tổng câu: {len(self.history)} | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả), F5 (Đọc TV)")
 
     def _clear_subtitles(self):
         self.history.clear()
@@ -772,7 +908,7 @@ class ToolListenApp(ctk.CTk):
             justify="center"
         )
         self.placeholder_lbl.pack(pady=35)
-        self.lbl_count.configure(text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả)")
+        self.lbl_count.configure(text="Tổng câu: 0 | Phím tắt: F2 (Gốc), F3 (Dịch), F4 (Tất cả), F5 (Đọc TV)")
 
     def _export_history(self):
         if not self.history:
@@ -796,5 +932,6 @@ class ToolListenApp(ctk.CTk):
 
     def on_closing(self):
         self._stop_listening()
+        self.tts.stop()
         self.destroy()
         sys.exit(0)

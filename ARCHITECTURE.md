@@ -25,12 +25,18 @@ flowchart TD
         D2["Translation Cache (Tránh dịch lặp)"]
     end
 
+    subgraph TTSEngine["Realtime Text-To-Speech (Phát Âm Tiếng Việt)"]
+        F1["Microsoft Edge Neural TTS (Hoài My / Nam Minh)"]
+        F2["Windows MCI Media Player (winmm.dll)"]
+        F3["Echo Suppression (Tạm dừng thu khi TTS đang phát)"]
+    end
+
     subgraph UIOverlay["Giao Diện Desktop Overlay (CustomTkinter)"]
         E1["Cửa sổ nổi Always-On-Top (Ghim trên cùng mọi ứng dụng)"]
         E2["Thẻ Phụ Đề Song Ngữ: Bản gốc + Bản dịch Tiếng Việt"]
-        E3["Nút 1-Click Copy: 📋 Copy Gốc | 📋 Copy Dịch | 📋 Copy Cả Hai"]
-        E4["Bảng Điều Khiển: Chọn Loa/Mic, Chọn Ngôn ngữ, Chỉnh Font/Màu"]
-        E5["Lịch sử hội thoại (Xem lại & tìm kiếm phụ đề trước đó)"]
+        E3["Nút 1-Click Copy: 📋 Copy Gốc [F2] | 📋 Copy Dịch [F3] | 📑 Copy Tất Cả [F4]"]
+        E4["Bảng Điều Khiển: Loa/Mic, Ngôn ngữ, Đọc Tiếng Việt [F5], Tốc độ"]
+        E5["Lịch sử hội thoại & Live Interim Subtitle"]
     end
 
     A1 -->|WASAPI Loopback| B1
@@ -40,12 +46,17 @@ flowchart TD
     C1 -->|Original Text| TranslationService
     C2 -->|Original Text| TranslationService
     TranslationService -->|Original + Vietnamese Text| UIOverlay
+    TranslationService -->|Vietnamese Text| F1
+    F1 --> F2
+    F2 -->|Phát tiếng Việt ra Loa/Tai nghe| A1
+    F2 -.->|Echo Suppression Signal| F3 -.->|Mute loopback trong lúc đọc| B2
 ```
 
 ## 2. Chi tiết các thành phần chính
 1. **Audio Capture Layer (`src/audio/recorder.py`)**:
    - Sử dụng Windows WASAPI Loopback để "nghe lén" chính xác mọi âm thanh đang phát ra tai nghe / loa của hệ thống (bất kể phát từ tab trình duyệt Youtube, ứng dụng Discord, Zoom hay Google Meet).
    - Tích hợp bộ lọc năng lượng âm thanh (RMS Energy threshold) và kiểm tra khoảng lặng (silence detection) để cắt câu thoại tự nhiên, không cắt vụn chữ.
+   - Hỗ trợ cờ chống tiếng vọng `set_suppressed(True)` khi hệ thống đang phát âm thanh dịch tiếng Việt ra loa.
 
 2. **STT Transcriber Layer (`src/stt/transcriber.py`)**:
    - Hỗ trợ chọn ngôn ngữ nguồn: `en-US` (Tiếng Anh), `auto` (Tự động phát hiện), `ja-JP` (Tiếng Nhật), `zh-CN` (Tiếng Trung), `ko-KR` (Tiếng Hàn), `fr-FR` (Tiếng Pháp)...
@@ -55,7 +66,14 @@ flowchart TD
    - Nhận chuỗi văn bản từ STT, dịch sang Tiếng Việt.
    - Cơ chế fallback thông minh: Thử dịch MyMemory -> Bing / Edge -> Cache.
 
-4. **UI Layer (`src/ui/app.py`)**:
+4. **TTS Speaker Layer (`src/tts/speaker.py`)**:
+   - Nhận chuỗi văn bản Tiếng Việt sau khi dịch, tổng hợp giọng nói Neural siêu tự nhiên qua Microsoft Edge TTS.
+   - Tùy chọn giọng đọc: Giọng Nữ (`vi-VN-HoaiMyNeural`), Giọng Nam (`vi-VN-NamMinhNeural`).
+   - Tùy chọn tốc độ đọc (`1.0x` đến `1.35x`) để đọc nhanh kịp ngữ cảnh đàm thoại realtime.
+   - Phát âm thanh qua Windows MCI (`winmm.dll`) mượt mà, không block giao diện.
+
+5. **UI Layer (`src/ui/app.py`)**:
    - Cửa sổ nổi Always-on-Top với nền bán trong suốt / dark mode hiện đại.
-   - Thao tác 1 click để Copy nhanh vào clipboard (có toast phản hồi "Đã copy!").
-   - Lịch sử đầy đủ giúp người dùng không bỏ lỡ câu thoại khi đang họp hoặc xem video dài.
+   - Thao tác 1 click để Copy nhanh vào clipboard (`F2` copy câu gốc, `F3` copy câu dịch, `F4` copy toàn bộ lịch sử).
+   - Phím tắt `F5` bật/tắt nhanh chế độ Dịch Nói Realtime.
+

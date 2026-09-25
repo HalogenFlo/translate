@@ -14,8 +14,8 @@ class AudioRecorder:
         on_phrase_interim: Optional[Callable[[np.ndarray, int], None]] = None,
         sample_rate: int = 16000,
         energy_threshold: float = 0.012,
-        silence_timeout: float = 0.35, # Giảm xuống 0.35s để phản hồi tức thì
-        min_phrase_len: float = 0.25,
+        silence_timeout: float = 0.28, # Siêu nhạy 0.28s để phản hồi tức thì realtime
+        min_phrase_len: float = 0.20,
         max_phrase_len: float = 12.0
     ):
         self.on_phrase_complete = on_phrase_complete
@@ -31,6 +31,11 @@ class AudioRecorder:
         self.selected_device_id: Optional[str] = None
         self.is_loopback: bool = True
         self.mic_enabled: bool = False # Mặc định TẮT micro để tránh thu tiếng ồn phòng
+        self.is_suppressed: bool = False # Tạm dừng thu khi TTS đang phát để chống tiếng vọng (Echo Suppression)
+
+    def set_suppressed(self, suppressed: bool):
+        """Bật/tắt tạm dừng thu âm (dùng khi TTS đang phát tiếng dịch ra loa)"""
+        self.is_suppressed = suppressed
 
     def set_mic_enabled(self, enabled: bool):
         """Bật hoặc tắt nhận micro"""

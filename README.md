@@ -6,11 +6,20 @@
 
 ## ✨ Tính Năng Nổi Bật
 
-1. **Tối ưu độ trễ siêu tốc - "Nói tới đâu xuất chữ tới đó" (Live Streaming Subtitle)**:
+1. **🔊 Chế Độ Dịch Nói Realtime (Bên kia nói hết câu -> Tự động phát âm Tiếng Việt ra loa) [F5]**:
+   - Ngay khi người đối diện (trên Discord, Meet, Zoom, YouTube...) nói dứt câu, hệ thống lập tức dịch và **tự động đọc to bản dịch Tiếng Việt ra loa/tai nghe cho bạn nghe trực tiếp**!
+   - Sử dụng **Microsoft Edge Neural TTS** giọng đọc tiếng Việt siêu tự nhiên, truyền cảm như người thật:
+     - 👩 **Giọng Nữ (Hoài My - Neural)**
+     - 👨 **Giọng Nam (Nam Minh - Neural)**
+   - Tùy chỉnh tốc độ đọc (`1.0x` chuẩn, `1.15x` nhanh vừa, `1.25x` nhanh, `1.35x` rất nhanh) để đọc kịp nhịp độ hội thoại.
+   - **Cơ chế chống tiếng vọng thông minh (Echo Loop Suppression)**: Tự động tạm hoãn bắt âm thanh loopback trong lúc TTS đang đọc tiếng Việt, triệt tiêu hoàn toàn hiện tượng loa máy tính tự thu lại âm thanh của chính mình để tránh vòng lặp tiếng vọng.
+   - Bấm nút **`🔊 Đọc TV: BẬT / TẮT`** hoặc nhấn phím tắt **`F5`** để bật/tắt tức thì.
+
+2. **Tối ưu độ trễ siêu tốc - "Nói tới đâu xuất chữ tới đó" (Live Streaming Subtitle)**:
    - Tích hợp luồng phát hiện âm thanh ngắt đoạn siêu nhanh (`silence_timeout = 0.35s`).
    - Khung **`🔴 Đang nói trực tiếp (Live Stream)`**: Chữ và bản dịch hiển thị tức thời ngay khi người nói phát âm từng từ, không cần đợi nói xong hết câu.
 
-2. **Cụm Nút Copy Siêu Tốc 1-Click & Phím Tắt [F2] / [F3] / [F4]**:
+3. **Cụm Nút Copy Siêu Tốc 1-Click & Phím Tắt [F2] / [F3] / [F4]**:
    - ⚡ **`[COPY GỐC VỪA NÓI - F2]`**: Bấm 1 click hoặc gõ phím **`F2`** để copy ngay câu thoại gốc mới nhất.
    - ⚡ **`[COPY DỊCH TIẾNG VIỆT - F3]`**: Bấm 1 click hoặc gõ phím **`F3`** để copy ngay câu dịch tiếng Việt mới nhất.
    - 📑 **`[COPY TẤT CẢ LỊCH SỬ - F4]`**: Bấm 1 click hoặc gõ phím **`F4`** để sao chép **toàn bộ cuộc hội thoại/video từ đầu đến giờ** (kèm mốc thời gian và cả bản gốc + dịch) để dán vào Word, Docs, Note hoặc ChatGPT!

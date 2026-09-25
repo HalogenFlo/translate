@@ -37,3 +37,23 @@ def test_format_all_history():
     assert "Tạm biệt" in formatted_vi_only
     assert "Hello" not in formatted_vi_only
 
+def test_app_tts_integration():
+    from src.ui.app import ToolListenApp
+    import customtkinter as ctk
+    app = ToolListenApp()
+    app.withdraw()
+
+    # Kiểm tra service tts đã được gắn vào app
+    assert hasattr(app, "tts")
+    assert app.tts is not None
+    assert app.tts.enabled is False
+
+    # Kiểm tra toggle tts
+    app._toggle_tts()
+    assert app.tts.enabled is True
+    app._toggle_tts()
+    assert app.tts.enabled is False
+
+    app.destroy()
+
+

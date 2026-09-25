@@ -51,3 +51,12 @@ def test_recorder_interim_callback():
     assert recorder.on_phrase_interim is not None
     assert recorder.silence_timeout <= 0.4 # Độ trễ thấp
 
+def test_recorder_suppress_echo():
+    recorder = AudioRecorder()
+    assert recorder.is_suppressed is False
+    recorder.set_suppressed(True)
+    assert recorder.is_suppressed is True
+    recorder.set_suppressed(False)
+    assert recorder.is_suppressed is False
+
+
